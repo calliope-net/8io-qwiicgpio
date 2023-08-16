@@ -6,7 +6,8 @@
     "files": [
         "main.blocks",
         "main.ts",
-        "README.md"
+        "README.md",
+        "8io-qwiicgpio.ts"
     ],
     "testFiles": [
         "test.ts"
