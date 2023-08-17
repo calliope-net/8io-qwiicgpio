@@ -84,4 +84,38 @@ https://en.wikipedia.org/wiki/General-purpose_input/output
         return bu.getUint8(0)
     }
 
+    // ========== 7-Segment
+
+    //% group="7-Segment" advanced=true
+    //% block="wandle %pZiffer um in 7-Segment Punkt %pPunkt"
+    export function siebenSegment(pZiffer: number, pPunkt: boolean) {
+        let dp: number = (pPunkt ? 0b10000000 : 0b00000000) // dezimalpunkt
+        switch (pZiffer) { //  GFEDCBA
+            case 0: { return 0b0111111 | dp }
+            case 1: { return 0b0000110 | dp }
+            case 2: { return 0b1011011 | dp }
+            case 3: { return 0b1001111 | dp }
+            case 4: { return 0b1100110 | dp }
+            case 5: { return 0b1101101 | dp }
+            case 6: { return 0b1111101 | dp }
+            case 7: { return 0b0000111 | dp }
+            case 8: { return 0b1111111 | dp }
+            case 9: { return 0b1101111 | dp }
+            case 10: { return 0b1110111 | dp }
+            case 11: { return 0b1111100 | dp }
+            case 12: { return 0b0111001 | dp }
+            case 13: { return 0b1011110 | dp }
+            case 14: { return 0b1111001 | dp }
+            case 15: { return 0b1110001 | dp }
+            default: { return pZiffer }
+        }
+    }
+
+    //% group="7-Segment" advanced=true
+    //% block="NOT %pNumber"
+    export function not(pNumber: number) {
+        return ~pNumber
+    }
+
+
 } // 8io-qwiicgpio.ts
