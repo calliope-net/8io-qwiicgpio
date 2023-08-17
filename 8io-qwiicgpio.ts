@@ -1,9 +1,15 @@
 
 //% color=#7F003F icon="\uf1ac" block="8IO Qwiic" weight=06
 namespace qwiicgpio
-/*
+/* 230817
 https://en.wikipedia.org/wiki/General-purpose_input/output
 
+https://www.sparkfun.com/products/17047
+https://learn.sparkfun.com/tutorials/sparkfun-qwiic-gpio-hookup-guide
+
+https://cdn.sparkfun.com/assets/b/b/f/1/7/TCA9534.pdf
+
+Code anhand der Datenblätter neu programmiert von Lutz Elßner im August 2023
 */ {
     export enum eADDR {
         GPIO_Qwiic = 0x27, GPIO_Qwiic_x26 = 0x26, GPIO_Qwiic_x25 = 0x25, GPIO_Qwiic_x24 = 0x24,
@@ -22,11 +28,11 @@ https://en.wikipedia.org/wiki/General-purpose_input/output
     //let _inversionStatus: number = 0    // Register 2 0=original polarity 1=inverted
     //let _gpioPinMode: number = 0xFF     // Register 3 1=input 0=output
 
-    export enum eIO { OUT = 0b00, IN = 0b01, IN_inverted = 0b11 }
+    export enum eIO { IN = 0b01, IN_inverted = 0b11, OUT = 0b00 }
 
 
     //% group="General-purpose input/output"
-    //% block="i2c %pADDR setMode | 7 %pIO7 6 %pIO6 5 %pIO5 4 %pIO4 3 %pIO3 2 %pIO2 1 %pIO1 0 %pIO0"
+    //% block="i2c %pADDR Konfiguration | 7 %pIO7 6 %pIO6 5 %pIO5 4 %pIO4 3 %pIO3 2 %pIO2 1 %pIO1 0 %pIO0" weight=96
     // inlineInputMode=inline
     export function setMode(pADDR: eADDR, pIO7: eIO, pIO6: eIO, pIO5: eIO, pIO4: eIO, pIO3: eIO, pIO2: eIO, pIO1: eIO, pIO0: eIO) {
         let r3 = 0b00000000 // CONFIGURATION 0=output 1=input
@@ -40,54 +46,88 @@ https://en.wikipedia.org/wiki/General-purpose_input/output
         if ((pIO1 & GPIO_IN) == GPIO_IN) { r3 |= 2 ** 1; if ((pIO1 & INVERT) == INVERT) { r2 |= 2 ** 1 } }
         if ((pIO0 & GPIO_IN) == GPIO_IN) { r3 |= 2 ** 0; if ((pIO0 & INVERT) == INVERT) { r2 |= 2 ** 0 } }
         //return r2
-        writeRegister(pADDR, eCommandByte.CONFIGURATION, r3, true)
-        writeRegister(pADDR, eCommandByte.INVERSION, r2, false)
+        writeRegister(pADDR, eCommandByte.CONFIGURATION, r3)
+        writeRegister(pADDR, eCommandByte.INVERSION, r2)
     }
 
     //% group="General-purpose input/output"
-    //% block="i2c %pADDR INPUT_PORT"
+    //% block="i2c %pADDR lese INPUT_PORT" weight=94
     export function readINPUT_PORT(pADDR: eADDR) {
-        return readRegister(pADDR, eCommandByte.INPUT_PORT, false)
+        return readRegister(pADDR, eCommandByte.INPUT_PORT)
     }
 
 
     //% group="General-purpose input/output"
-    //% block="i2c %pADDR OUTPUT_PORT %pByte"
+    //% block="i2c %pADDR schreibe OUTPUT_PORT %pByte" weight=90
     export function writeOUTPUT_PORT(pADDR: eADDR, pByte: number) {
-        writeRegister(pADDR, eCommandByte.OUTPUT_PORT, pByte, false)
+        writeRegister(pADDR, eCommandByte.OUTPUT_PORT, pByte)
     }
 
 
     // ========== advanced=true
-
-    //% group="GPIO Register" advanced=true
-    //% block="i2c %pADDR writeRegister %pRegister %pByte repeat %pRepeat" 
-    //% pRegister.defl=qwiicgpio.eCommandByte.OUTPUT_PORT pByte.defl=1
-    //% inlineInputMode=inline
-    export function writeRegister(pADDR: eADDR, pRegister: eCommandByte, pByte: number, pRepeat: boolean) {
-        let bu = pins.createBuffer(2)
-        bu.setUint8(0, pRegister)
-        bu.setUint8(1, pByte)
-        pins.i2cWriteBuffer(pADDR, bu, pRepeat)
-    }
+    // ========== GPIO Register
 
 
     //% group="GPIO Register" advanced=true
-    //% block="i2c %pi2cADDR readRegister %pRegister repeat %pRepeat" weight=60
-    export function readRegister(pADDR: eADDR, pRegister: eCommandByte, pRepeat: boolean) {
+    //% block="i2c %pi2cADDR readRegister %pRegister" weight=62
+    export function readRegister(pADDR: eADDR, pRegister: eCommandByte) {
         let bu = pins.createBuffer(1)
         bu.setUint8(0, pRegister)
         pins.i2cWriteBuffer(pADDR, bu, true)
 
-        bu = pins.i2cReadBuffer(pADDR, 1, pRepeat)
+        bu = pins.i2cReadBuffer(pADDR, 1)
 
         return bu.getUint8(0)
     }
 
-    // ========== 7-Segment
+    //% group="GPIO Register" advanced=true
+    //% block="i2c %pADDR writeRegister %pRegister %pByte" weight=60
+    //% pRegister.defl=qwiicgpio.eCommandByte.OUTPUT_PORT pByte.defl=1
+    //% inlineInputMode=inline
+    export function writeRegister(pADDR: eADDR, pRegister: eCommandByte, pByte: number) {
+        let bu = pins.createBuffer(2)
+        bu.setUint8(0, pRegister)
+        bu.setUint8(1, pByte)
+        pins.i2cWriteBuffer(pADDR, bu)
+    }
 
-    //% group="7-Segment" advanced=true
-    //% block="wandle %pZiffer um in 7-Segment Punkt %pPunkt"
+    // ========== Logik
+
+    export enum eBit { AND, OR, XOR, NOT_AND, LEFT, RIGHT }
+
+    //% group="Logik" advanced=true
+    //% block="%a %operator %b" weight=56
+    //% b.defl=255
+    export function bitwise(a: number, operator: eBit, b: number): number {
+        switch (operator) {
+            case eBit.AND: { return a & b }
+            case eBit.OR: { return a | b }
+            case eBit.XOR: { return a ^ b }
+            case eBit.NOT_AND: { return (~a) & b }
+            case eBit.LEFT: { return a << b }
+            case eBit.RIGHT: { return a >> b }
+            default: { return a }
+        }
+
+        /* if (operator == eBit.AND) { return a & b }
+        else if (operator == eBit.OR) { return a | b }
+        else if (operator == eBit.XOR) { return a ^ b }
+        else if (operator == eBit.NOT_AND) { return (~a) & b }
+        else if (operator == eBit.LEFT) { return a << b }
+        else if (operator == eBit.RIGHT) { return a >> b }
+        else { return a } */
+    }
+
+    //% group="Logik" advanced=true
+    //% block="NOT %pNumber" weight=54
+    export function not(pNumber: number) {
+        return ~pNumber
+    }
+
+    // ========== 7-Segment Anzeige an Port (7-0) (.GFEDCBA)
+
+    //% group="7-Segment Anzeige an Port (7-0) (.GFEDCBA)" advanced=true
+    //% block="wandle %pZiffer um in 7-Segment; Punkt %pPunkt" weight=72
     export function siebenSegment(pZiffer: number, pPunkt: boolean) {
         let dp: number = (pPunkt ? 0b10000000 : 0b00000000) // dezimalpunkt
         switch (pZiffer) { //  GFEDCBA
@@ -110,12 +150,5 @@ https://en.wikipedia.org/wiki/General-purpose_input/output
             default: { return pZiffer }
         }
     }
-
-    //% group="7-Segment" advanced=true
-    //% block="NOT %pNumber"
-    export function not(pNumber: number) {
-        return ~pNumber
-    }
-
 
 } // 8io-qwiicgpio.ts
