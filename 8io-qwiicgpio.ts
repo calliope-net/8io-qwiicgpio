@@ -1,5 +1,5 @@
 
-//% color=#7F003F icon="\uf140" block="8IO Qwiic" weight=06
+//% color=#7F0000 icon="\uf140" block="8IO Qwiic" weight=06
 namespace qwiicgpio
 /* 230817
 https://en.wikipedia.org/wiki/General-purpose_input/output
