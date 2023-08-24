@@ -1,7 +1,7 @@
 
-//% color=#7F0000 icon="\uf140" block="8IO Qwiic" weight=06
+//% color=#7F0000 icon="\uf140" block="8-IO Qwiic" weight=08
 namespace qwiicgpio
-/* 230817
+/* 230817 230824
 https://en.wikipedia.org/wiki/General-purpose_input/output
 
 https://www.sparkfun.com/products/17047
