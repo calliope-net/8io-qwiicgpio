@@ -5,6 +5,8 @@ Diese Seite bei [https://calliope-net.github.io/8io-qwiicgpio/](https://calliope
 
 * [SparkFun Qwiic GPIO](https://www.sparkfun.com/products/17047)
 
+![](https://cdn.sparkfun.com//assets/parts/1/5/9/9/3/17047-SparkFun_Qwiic_GPIO-04.jpg)
+
 Dieses Repository kann als **Erweiterung** in MakeCode hinzugefügt werden.
 
 * öffne [makecode.calliope.cc](https://makecode.calliope.cc)
