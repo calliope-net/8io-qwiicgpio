@@ -1,5 +1,5 @@
 
-Diese Seite bei [https://calliope-net.github.io/8io-qwiicgpio/](https://calliope-net.github.io/8io-qwiicgpio/) öffnen.
+Diese Seite bei [https://calliope-net.github.io/gpio/](https://calliope-net.github.io/gpio/) öffnen.
 
 ### Calliope Erweiterung für das i2c Modul:
 
@@ -13,7 +13,7 @@ Dieses Repository kann als **Erweiterung** in MakeCode hinzugefügt werden.
 * klicke auf eine Projektvorlage
 * klicke unter dem Zahnrad-Menü auf **Erweiterungen** (oder bei den Blöcken ganz unten)
 * kopiere die folgende **Projekt-URL** in die Zwischenablage (Strg-C)
-* **calliope-net/8io-qwiicgpio**
+* **calliope-net/gpio**
 * füge sie auf der Webseite oben ein (Strg-V) und klicke auf die Lupe (oder ENTER)
 * wenn die Erweiterung gefunden wurde, klicke auf das Rechteck
 * jetzt hat die Liste den neuen Eintrag **8IO Qwiic** bekommen
