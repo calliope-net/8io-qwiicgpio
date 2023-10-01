@@ -8,7 +8,8 @@
         "main.blocks",
         "main.ts",
         "README.md",
-        "8io-qwiicgpio.ts"
+        "8io-qwiicgpio.ts",
+        "qwiicgpio.ts"
     ],
     "testFiles": [
         "test.ts"

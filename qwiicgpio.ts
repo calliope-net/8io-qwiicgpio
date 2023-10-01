@@ -1,7 +1,7 @@
 
-//% color=#7F0000 icon="\uf140" block="8-IO Qwiic" weight=08
-namespace qwiicgpio_
-/* 230817 230825
+//% color=#7F0000 icon="\uf140" block="8-GPIO" weight=08
+namespace qwiicgpio
+/* 230817 230825 230930
 https://en.wikipedia.org/wiki/General-purpose_input/output
 
 https://www.sparkfun.com/products/17047
@@ -12,8 +12,8 @@ https://cdn.sparkfun.com/assets/b/b/f/1/7/TCA9534.pdf
 Code anhand der Datenblätter neu programmiert von Lutz Elßner im August 2023
 */ {
     export enum eADDR {
-        GPIO_Qwiic = 0x27, GPIO_Qwiic_x26 = 0x26, GPIO_Qwiic_x25 = 0x25, GPIO_Qwiic_x24 = 0x24,
-        GPIO_Qwiic_x23 = 0x23, GPIO_Qwiic_x22 = 0x22, GPIO_Qwiic_x21 = 0x21, GPIO_Qwiic_x20 = 0x20
+        GPIO_x27 = 0x27, GPIO_x26 = 0x26, GPIO_x25 = 0x25, GPIO_x24 = 0x24,
+        GPIO_x23 = 0x23, GPIO_x22 = 0x22, GPIO_x21 = 0x21, GPIO_x20 = 0x20
     }
 
     export enum eCommandByte { INPUT_PORT = 0x00, OUTPUT_PORT = 0x01, INVERSION = 0x02, CONFIGURATION = 0x03 }
@@ -164,3 +164,4 @@ Code anhand der Datenblätter neu programmiert von Lutz Elßner im August 2023
     }
 
 } // 8io-qwiicgpio.ts
+
