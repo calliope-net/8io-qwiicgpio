@@ -31,10 +31,11 @@ Code anhand der Datenblätter neu programmiert von Lutz Elßner im August 2023
     export enum eIO { IN = 0b01, IN_inverted = 0b11, OUT = 0b00 }
 
 
-    //% group="General-purpose input/output"
+    //% group="beim Start"
     //% block="i2c %pADDR Konfiguration | 7 %pIO7 6 %pIO6 5 %pIO5 4 %pIO4 3 %pIO3 2 %pIO2 1 %pIO1 0 %pIO0" weight=96
+    //% pADDR.shadow="qwiicgpio_eADDR"
     // inlineInputMode=inline
-    export function setMode(pADDR: eADDR, pIO7: eIO, pIO6: eIO, pIO5: eIO, pIO4: eIO, pIO3: eIO, pIO2: eIO, pIO1: eIO, pIO0: eIO) {
+    export function setMode(pADDR: number, pIO7: eIO, pIO6: eIO, pIO5: eIO, pIO4: eIO, pIO3: eIO, pIO2: eIO, pIO1: eIO, pIO0: eIO) {
         let r3 = 0b00000000 // CONFIGURATION 0=output 1=input
         let r2 = 0b00000000 // INVERSION 0=original polarity 1=inverted
         if ((pIO7 & GPIO_IN) == GPIO_IN) { r3 |= 2 ** 7; if ((pIO7 & INVERT) == INVERT) { r2 |= 2 ** 7 } }
@@ -51,29 +52,32 @@ Code anhand der Datenblätter neu programmiert von Lutz Elßner im August 2023
     }
 
     //% group="General-purpose input/output"
-    //% block="i2c %pADDR lese INPUT_PORT" weight=94
-    export function readINPUT_PORT(pADDR: eADDR) {
+    //% block="i2c %pADDR lese INPUT_PORT" weight=2
+    //% pADDR.shadow="qwiicgpio_eADDR"
+    export function readINPUT_PORT(pADDR: number) {
         return readRegister(pADDR, eCommandByte.INPUT_PORT)
     }
 
 
     //% group="General-purpose input/output"
-    //% block="i2c %pADDR schreibe OUTPUT_PORT %pByte" weight=90
-    export function writeOUTPUT_PORT(pADDR: eADDR, pByte: number) {
-        writeRegister(pADDR, eCommandByte.OUTPUT_PORT, pByte)
+    //% block="i2c %pADDR schreibe OUTPUT_PORT %byte" weight=1
+    //% pADDR.shadow="qwiicgpio_eADDR"
+    //% byte.min=0 byte.max=255 byte.defl=1
+    export function writeOUTPUT_PORT(pADDR: number, byte: number) {
+        writeRegister(pADDR, eCommandByte.OUTPUT_PORT, byte)
     }
 
 
     // ========== advanced=true
-    // ========== GPIO Register
-
+    // ========== group="GPIO Register"
 
     //% group="GPIO Register" advanced=true
-    //% block="i2c %pi2cADDR readRegister %pRegister" weight=62
-    export function readRegister(pADDR: eADDR, pRegister: eCommandByte) {
+    //% block="i2c %pADDR readRegister %pRegister" weight=2
+    //% pADDR.shadow="qwiicgpio_eADDR"
+    export function readRegister(pADDR: number, pRegister: eCommandByte) {
         let bu = pins.createBuffer(1)
         bu.setUint8(0, pRegister)
-        pins.i2cWriteBuffer(pADDR, bu, true)
+        qwiicgpio_i2cWriteBufferError = pins.i2cWriteBuffer(pADDR, bu, true)
 
         bu = pins.i2cReadBuffer(pADDR, 1)
 
@@ -81,14 +85,16 @@ Code anhand der Datenblätter neu programmiert von Lutz Elßner im August 2023
     }
 
     //% group="GPIO Register" advanced=true
-    //% block="i2c %pADDR writeRegister %pRegister %pByte" weight=60
-    //% pRegister.defl=qwiicgpio.eCommandByte.OUTPUT_PORT pByte.defl=1
+    //% block="i2c %pADDR writeRegister %pRegister %byte" weight=1
+    //% pADDR.shadow="qwiicgpio_eADDR"
+    //% pRegister.defl=qwiicgpio.eCommandByte.OUTPUT_PORT
+    //% byte.min=0 byte.max=255 byte.defl=1
     //% inlineInputMode=inline
-    export function writeRegister(pADDR: eADDR, pRegister: eCommandByte, pByte: number) {
+    export function writeRegister(pADDR: number, pRegister: eCommandByte, byte: number) {
         let bu = pins.createBuffer(2)
         bu.setUint8(0, pRegister)
-        bu.setUint8(1, pByte)
-        pins.i2cWriteBuffer(pADDR, bu)
+        bu.setUint8(1, byte)
+        qwiicgpio_i2cWriteBufferError = pins.i2cWriteBuffer(pADDR, bu)
     }
 
 
@@ -113,7 +119,7 @@ Code anhand der Datenblätter neu programmiert von Lutz Elßner im August 2023
 
     //% group="Logik" advanced=true
     //% block="Bitweise %a %operator %b" weight=6
-    //% b.defl=255
+    //% b.min=0 b.max=255 b.defl=255
     export function bitwise(a: number, operator: eBit, b: number): number {
         switch (operator) {
             case eBit.AND: { return a & b }
@@ -137,12 +143,12 @@ Code anhand der Datenblätter neu programmiert von Lutz Elßner im August 2023
     // ========== 7-Segment Anzeige an Port (7-0) (.GFEDCBA)
 
     //% group="7-Segment Anzeige an Port (7-0) (.GFEDCBA)" advanced=true
-    //% block="wandle %pZiffer um in 7-Segment; Punkt %pPunkt"
-    //% pZiffer.min=0 pZiffer.max=15
+    //% block="wandle %hexZiffer um in 7-Segment; Punkt %pPunkt"
+    //% hexZiffer.min=0 hexZiffer.max=15
     //% pPunkt.shadow="toggleOnOff"
-    export function siebenSegment(pZiffer: number, pPunkt: boolean) {
+    export function siebenSegment(hexZiffer: number, pPunkt: boolean) {
         let dp: number = (pPunkt ? 0b10000000 : 0b00000000) // dezimalpunkt
-        switch (pZiffer) { //  GFEDCBA
+        switch (hexZiffer) { //  GFEDCBA
             case 0: { return 0b0111111 | dp }
             case 1: { return 0b0000110 | dp }
             case 2: { return 0b1011011 | dp }
@@ -159,9 +165,23 @@ Code anhand der Datenblätter neu programmiert von Lutz Elßner im August 2023
             case 13: { return 0b1011110 | dp }
             case 14: { return 0b1111001 | dp }
             case 15: { return 0b1110001 | dp }
-            default: { return pZiffer }
+            default: { return hexZiffer }
         }
     }
 
-} // 8io-qwiicgpio.ts
+
+    // ========== group="i2c Adressen"
+
+    //% blockId=qwiicgpio_eADDR
+    //% group="i2c Adressen" advanced=true
+    //% block="%pADDR" weight=4
+    export function qwiicgpio_eADDR(pADDR: eADDR): number { return pADDR }
+
+    //% group="i2c Adressen" advanced=true
+    //% block="Fehlercode vom letzten WriteBuffer (0 ist kein Fehler)" weight=2
+    export function i2cError() { return qwiicgpio_i2cWriteBufferError }
+    let qwiicgpio_i2cWriteBufferError: number = 0 // Fehlercode vom letzten WriteBuffer (0 ist kein Fehler)
+
+
+} // qwiicgpio.ts
 
