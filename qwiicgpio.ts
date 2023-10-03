@@ -141,20 +141,15 @@ Code anhand der Datenblätter neu programmiert von Lutz Elßner im August 2023
 
     //% group="Logik" advanced=true
     //% block="parseInt %text || radix %radix" weight=2
-    //% radix.defl=qwiicgpio.eRadix.DEZ
+    //% radix.defl=10
     export function parseint(text: string, radix?: eRadix) {
-        //basic.showNumber(radix)
-        if (radix == eRadix.DEZ) {
-            basic.setLedColor(0xff0000)
-            return parseInt(text)
-        } else {
-            basic.setLedColor(0x00ff00)
+        if (radix == 10 && text.length >= 3 && text.substr(0, 2).toLowerCase() == "0b")
+            return parseInt(text.substr(2), 2) // 0b -> BIN
+        else if (radix == 10)
+            return parseInt(text) // 0x.. -> HEX sonst -> DEZ
+        else
             return parseInt(text, radix)
-        }
-        //return Number.isNaN(radix)
-        //return parseInt(text, radix)
     }
-
 
 
 
