@@ -133,12 +133,30 @@ Code anhand der Datenblätter neu programmiert von Lutz Elßner im August 2023
         }
     }
 
-
     //% group="Logik" advanced=true
     //% block="Bitweise NOT %a" weight=4
-    export function not(a: number) {
-        return ~a
+    export function not(a: number) { return ~a }
+
+    export enum eRadix { DEZ = 10, HEX = 16, BIN = 2 }
+
+    //% group="Logik" advanced=true
+    //% block="parseInt %text || radix %radix" weight=2
+    //% radix.defl=qwiicgpio.eRadix.DEZ
+    export function parseint(text: string, radix?: eRadix) {
+        //basic.showNumber(radix)
+        if (radix == eRadix.DEZ) {
+            basic.setLedColor(0xff0000)
+            return parseInt(text)
+        } else {
+            basic.setLedColor(0x00ff00)
+            return parseInt(text, radix)
+        }
+        //return Number.isNaN(radix)
+        //return parseInt(text, radix)
     }
+
+
+
 
     // ========== 7-Segment Anzeige an Port (7-0) (.GFEDCBA)
 
