@@ -191,7 +191,7 @@ Code anhand der Datenblätter neu programmiert von Lutz Elßner im August 2023
     export function qwiicgpio_eADDR(pADDR: eADDR): number { return pADDR }
 
     //% group="i2c Adressen" advanced=true
-    //% block="Fehlercode vom letzten WriteBuffer (0 ist kein Fehler)" weight=2
+    //% block="i2c Fehlercode" weight=2
     export function i2cError() { return qwiicgpio_i2cWriteBufferError }
     let qwiicgpio_i2cWriteBufferError: number = 0 // Fehlercode vom letzten WriteBuffer (0 ist kein Fehler)
 
