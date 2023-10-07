@@ -15,6 +15,8 @@ Code anhand der Datenblätter neu programmiert von Lutz Elßner im August 2023
         GPIO_x27 = 0x27, GPIO_x26 = 0x26, GPIO_x25 = 0x25, GPIO_x24 = 0x24,
         GPIO_x23 = 0x23, GPIO_x22 = 0x22, GPIO_x21 = 0x21, GPIO_x20 = 0x20
     }
+    let n_i2cCheck: boolean = false // i2c-Check
+    let n_i2cError: number = 0 // Fehlercode vom letzten WriteBuffer (0 ist kein Fehler)
 
     export enum eCommandByte { INPUT_PORT = 0x00, OUTPUT_PORT = 0x01, INVERSION = 0x02, CONFIGURATION = 0x03 }
 
@@ -30,9 +32,17 @@ Code anhand der Datenblätter neu programmiert von Lutz Elßner im August 2023
 
     export enum eIO { IN = 0b01, IN_inverted = 0b11, OUT = 0b00 }
 
+    //% group="beim Start"
+    //% block="i2c %pADDR i2c-Check %ck" weight=4
+    //% pADDR.shadow="qwiicgpio_eADDR"
+    //% ck.shadow="toggleOnOff" ck.defl=1
+    export function beimStart(pADDR: number, ck: boolean) {
+        n_i2cCheck = (ck ? true : false) // optionaler boolean Parameter kann undefined sein
+        n_i2cError = 0 // Reset Fehlercode
+    }
 
     //% group="beim Start"
-    //% block="i2c %pADDR Konfiguration | 7 %pIO7 6 %pIO6 5 %pIO5 4 %pIO4 3 %pIO3 2 %pIO2 1 %pIO1 0 %pIO0" weight=96
+    //% block="i2c %pADDR Konfiguration | 7 %pIO7 6 %pIO6 5 %pIO5 4 %pIO4 3 %pIO3 2 %pIO2 1 %pIO1 0 %pIO0" weight=2
     //% pADDR.shadow="qwiicgpio_eADDR"
     // inlineInputMode=inline
     export function setMode(pADDR: number, pIO7: eIO, pIO6: eIO, pIO5: eIO, pIO4: eIO, pIO3: eIO, pIO2: eIO, pIO1: eIO, pIO0: eIO) {
@@ -75,12 +85,10 @@ Code anhand der Datenblätter neu programmiert von Lutz Elßner im August 2023
     //% block="i2c %pADDR readRegister %pRegister" weight=2
     //% pADDR.shadow="qwiicgpio_eADDR"
     export function readRegister(pADDR: number, pRegister: eCommandByte) {
-        let bu = pins.createBuffer(1)
+        let bu = Buffer.create(1)
         bu.setUint8(0, pRegister)
-        qwiicgpio_i2cWriteBufferError = pins.i2cWriteBuffer(pADDR, bu, true)
-
-        bu = pins.i2cReadBuffer(pADDR, 1)
-
+        i2cWriteBuffer(pADDR, bu, true)
+        bu = i2cReadBuffer(pADDR, 1)
         return bu.getUint8(0)
     }
 
@@ -91,10 +99,10 @@ Code anhand der Datenblätter neu programmiert von Lutz Elßner im August 2023
     //% byte.min=0 byte.max=255 byte.defl=1
     //% inlineInputMode=inline
     export function writeRegister(pADDR: number, pRegister: eCommandByte, byte: number) {
-        let bu = pins.createBuffer(2)
+        let bu = Buffer.create(2)
         bu.setUint8(0, pRegister)
         bu.setUint8(1, byte)
-        qwiicgpio_i2cWriteBufferError = pins.i2cWriteBuffer(pADDR, bu)
+        i2cWriteBuffer(pADDR, bu)
     }
 
 
@@ -192,9 +200,23 @@ Code anhand der Datenblätter neu programmiert von Lutz Elßner im August 2023
 
     //% group="i2c Adressen" advanced=true
     //% block="i2c Fehlercode" weight=2
-    export function i2cError() { return qwiicgpio_i2cWriteBufferError }
-    let qwiicgpio_i2cWriteBufferError: number = 0 // Fehlercode vom letzten WriteBuffer (0 ist kein Fehler)
+    export function i2cError() { return n_i2cError }
 
+    function i2cWriteBuffer(pADDR: number, buf: Buffer, repeat: boolean = false) {
+        if (n_i2cError == 0) { // vorher kein Fehler
+            n_i2cError = pins.i2cWriteBuffer(pADDR, buf, repeat)
+            if (n_i2cCheck && n_i2cError != 0)  // vorher kein Fehler, wenn (n_i2cCheck=true): beim 1. Fehler anzeigen
+                basic.showString(Buffer.fromArray([pADDR]).toHex()) // zeige fehlerhafte i2c-Adresse als HEX
+        } else if (!n_i2cCheck)  // vorher Fehler, aber ignorieren (n_i2cCheck=false): i2c weiter versuchen
+            n_i2cError = pins.i2cWriteBuffer(pADDR, buf, repeat)
+        //else { } // n_i2cCheck=true und n_i2cError != 0: weitere i2c Aufrufe blockieren
+    }
+
+    function i2cReadBuffer(pADDR: number, size: number, repeat: boolean = false): Buffer {
+        if (!n_i2cCheck || n_i2cError == 0)
+            return pins.i2cReadBuffer(pADDR, size, repeat)
+        else
+            return Buffer.create(size)
+    }
 
 } // qwiicgpio.ts
-
