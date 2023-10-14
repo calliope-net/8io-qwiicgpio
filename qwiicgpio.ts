@@ -1,7 +1,7 @@
 
 //% color=#7F0000 icon="\uf140" block="8-GPIO" weight=08
 namespace qwiicgpio
-/* 230817 230825 230930
+/* 230817 230825 231014 https://github.com/calliope-net/gpio
 https://en.wikipedia.org/wiki/General-purpose_input/output
 
 https://www.sparkfun.com/products/17047
@@ -25,23 +25,20 @@ Code anhand der Datenblätter neu programmiert von Lutz Elßner im August 2023
     //const GPIO_OUT = false      // Register 3: 0=output
     const GPIO_IN = 0b01        // Register 3: 1=input
 
-    //let _gpioInStatus: number           // Register 0
-    //let _gpioOutStatus: number = 0xFF   // Register 1
-    //let _inversionStatus: number = 0    // Register 2 0=original polarity 1=inverted
-    //let _gpioPinMode: number = 0xFF     // Register 3 1=input 0=output
-
     export enum eIO { IN = 0b01, IN_inverted = 0b11, OUT = 0b00 }
 
-    //% group="beim Start"
-    //% block="i2c %pADDR i2c-Check %ck" weight=4
+
+    //% group="calliope-net.github.io/gpio"
+    //% block="i2c %pADDR beim Start || i2c-Check %ck" weight=4
     //% pADDR.shadow="qwiicgpio_eADDR"
     //% ck.shadow="toggleOnOff" ck.defl=1
-    export function beimStart(pADDR: number, ck: boolean) {
+    export function beimStart(pADDR: number, ck?: boolean) {
         n_i2cCheck = (ck ? true : false) // optionaler boolean Parameter kann undefined sein
         n_i2cError = 0 // Reset Fehlercode
+        readRegister(pADDR, eCommandByte.CONFIGURATION)
     }
 
-    //% group="beim Start"
+    //% group="calliope-net.github.io/gpio"
     //% block="i2c %pADDR Konfiguration | 7 %pIO7 6 %pIO6 5 %pIO5 4 %pIO4 3 %pIO3 2 %pIO2 1 %pIO1 0 %pIO0" weight=2
     //% pADDR.shadow="qwiicgpio_eADDR"
     // inlineInputMode=inline
@@ -62,10 +59,10 @@ Code anhand der Datenblätter neu programmiert von Lutz Elßner im August 2023
     }
 
     //% group="General-purpose input/output"
-    //% block="i2c %pADDR lese INPUT_PORT" weight=2
+    //% block="i2c %pADDR lese INPUT Bits" weight=2
     //% pADDR.shadow="qwiicgpio_eADDR"
-    export function readINPUT_PORT(pADDR: number) {
-        return readRegister(pADDR, eCommandByte.INPUT_PORT)
+    export function readINPUT_PORT(pADDR: number) { // Bitweise AND setzt die OUTPUT Bits auf 0
+        return readRegister(pADDR, eCommandByte.INPUT_PORT) & readRegister(pADDR, eCommandByte.CONFIGURATION)
     }
 
 
@@ -85,11 +82,11 @@ Code anhand der Datenblätter neu programmiert von Lutz Elßner im August 2023
     //% block="i2c %pADDR readRegister %pRegister" weight=2
     //% pADDR.shadow="qwiicgpio_eADDR"
     export function readRegister(pADDR: number, pRegister: eCommandByte) {
-        let bu = Buffer.create(1)
-        bu.setUint8(0, pRegister)
-        i2cWriteBuffer(pADDR, bu, true)
-        bu = i2cReadBuffer(pADDR, 1)
-        return bu.getUint8(0)
+        //let bu = Buffer.create(1)
+        //bu.setUint8(0, pRegister)
+        i2cWriteBuffer(pADDR, Buffer.fromArray([pRegister]), true)
+        //bu = i2cReadBuffer(pADDR, 1)
+        return i2cReadBuffer(pADDR, 1).getUint8(0)
     }
 
     //% group="GPIO Register" advanced=true
@@ -99,10 +96,10 @@ Code anhand der Datenblätter neu programmiert von Lutz Elßner im August 2023
     //% byte.min=0 byte.max=255 byte.defl=1
     //% inlineInputMode=inline
     export function writeRegister(pADDR: number, pRegister: eCommandByte, byte: number) {
-        let bu = Buffer.create(2)
-        bu.setUint8(0, pRegister)
-        bu.setUint8(1, byte)
-        i2cWriteBuffer(pADDR, bu)
+        //let bu = Buffer.create(2)
+        //bu.setUint8(0, pRegister)
+        //bu.setUint8(1, byte)
+        i2cWriteBuffer(pADDR, Buffer.fromArray([pRegister, byte]))
     }
 
 
