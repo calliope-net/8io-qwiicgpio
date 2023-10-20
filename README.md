@@ -16,14 +16,13 @@ Dieses Repository kann als **Erweiterung** in MakeCode hinzugefügt werden.
 * **calliope-net/gpio**
 * füge sie auf der Webseite oben ein (Strg-V) und klicke auf die Lupe (oder ENTER)
 * wenn die Erweiterung gefunden wurde, klicke auf das Rechteck
-* jetzt hat die Liste den neuen Eintrag **8-IO Qwiic** bekommen
+* jetzt hat die Liste den neuen Eintrag **8-GPIO** bekommen
 
 ![](blocks.png)
 
 ### Beschreibung der Erweiterung für 'SparkFun Qwiic GPIO'
 
 *
-
 
 ### Erweiterungen
 
